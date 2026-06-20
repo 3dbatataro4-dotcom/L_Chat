@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#C4E7F5">
+    <title>L-Chat: 心跳隱蔽協議</title>
+    <link rel="icon" type="image/png" href="assets/img/icon.png">
+    <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+    <div id="game-container">
+        <!-- 運行模式選擇畫面 -->
+        <div id="mode-screen" class="screen active" style="z-index: 10000; background: #fdfbf7; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+            <h2 style="font-family: var(--font-title); color: var(--text-gold); font-size: 2rem; margin-bottom: 30px; letter-spacing: 2px;">請選擇素材加載模式</h2>
+            <div class="menu-buttons" style="width: 250px; align-items: center;">
+                <button id="btn-mode-local" class="btn-primary" style="width: 100%; color: var(--text-gold); background: transparent;">本地運行 (Local)</button>
+                <button id="btn-mode-online" class="btn-primary" style="width: 100%; color: var(--text-gold); background: transparent;">線上運行 (Online)</button>
+            </div>
+            <p style="margin-top: 20px; font-size: 0.9rem; color: #666; max-width: 80%; line-height: 1.5;">
+                *若為開發測試，請選擇「本地運行」。<br>
+                *若為發布版本，請選擇「線上運行」，以載入遠端素材庫。
+            </p>
+        </div>
+
+        <!-- 場景提示 -->
+        <div id="location-hint"></div>
+        <!-- 標題畫面 -->
+        <div id="title-screen" class="screen">
+            <h1 class="title-logo">L-Chat</h1>
+            <p class="subtitle">心跳隱蔽協議</p>
+            <div class="menu-buttons">
+                <button id="btn-start" class="btn-primary">開始遊戲</button>
+                <button id="btn-load" class="btn-secondary">讀取進度</button>
+                <button id="btn-preload" class="btn-secondary">預加載全部素材</button>
+            </div>
+            <div class="bg-fx">
+                <div class="dust"></div>
+            </div>
+        </div>
+
+        <!-- 漸黑文字畫面 -->
+        <div id="fade-screen" class="screen">
+            <div id="fade-text"></div>
+        </div>
+
+        <!-- Bad End 畫面 -->
+        <div id="be-screen" class="screen">
+            <div id="be-text" class="glitch-text-be" data-text="BAD END">BAD END</div>
+            <div id="be-subtext">理智歸零，已被強制同化。</div>
+            <button id="btn-be-restart" class="btn-be-return" style="margin-top: 50px;">返回標題</button>
+        </div>
+
+        <!-- Log 回顧介面 -->
+        <div id="log-overlay" class="hidden">
+            <div class="log-header">
+                <h3>對話回顧</h3>
+                <button id="btn-close-log" class="top-left-btn" style="position: absolute; left: 20px; top: 20px; z-index: 100;">＜ 返回</button>
+            </div>
+            <div id="log-content"></div>
+        </div>
+
+        <!-- 視覺小說 (VN) 介面 -->
+        <div id="vn-screen" class="screen">
+            <div id="vn-bg"></div>
+            <div id="vn-bg-overlay"></div>
+            <div id="vn-characters"></div>
+        </div>
+
+        <!-- 共用對話框 (Global Overlay) -->
+        <div id="vn-dialogue-box" class="hidden">
+            <div id="vn-name"></div>
+            <div id="vn-avatar"></div>
+            <div id="vn-text"></div>
+            <div class="continue-icon">▼</div>
+        </div>
+
+        <!-- L-Chat 介面 -->
+        <div id="chat-screen" class="screen">
+            <div class="chat-header">
+                <div class="back-btn">&lt;</div>
+                <div class="chat-title">L-Chat</div>
+                <div class="chat-menu">...</div>
+            </div>
+            <div id="chat-history"></div>
+            
+            <!-- 聊天輸入區 -->
+            <div class="chat-input-area">
+                <div class="input-box" id="chat-input-box">
+                    <span id="chat-input-text"></span>
+                    <span class="cursor">|</span>
+                </div>
+                <button class="send-btn" id="chat-send-btn">發送</button>
+            </div>
+
+            <!-- QTE 覆蓋層 -->
+            <div id="qte-overlay">
+                <div class="qte-timer-bar"><div class="qte-timer-fill" id="qte-timer-fill"></div></div>
+                <div id="qte-timer-text" class="qte-timer-text">08.0s</div>
+                <div class="qte-content">
+                    <p id="qte-instruction"></p>
+                    <div id="qte-draft-display" style="display: none;"></div>
+                    <div id="qte-options" style="display: none;"></div>
+                    <button id="qte-backspace-btn" style="display: none;">狂按下方【刪除】按鈕！</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 系統提示 / 存檔介面 -->
+        <div id="system-modal">
+            <div class="modal-content">
+                <h3 id="modal-title">系統提示</h3>
+                <div id="modal-body"></div>
+                <button id="modal-close">關閉</button>
+            </div>
+        </div>
+
+        <!-- 右上角抽屜式 UI -->
+        <div id="settings-drawer" class="drawer">
+            <div class="drawer-handle" id="drawer-handle">☰</div>
+            <div class="drawer-content">
+                <h4 class="drawer-title">系統設定</h4>
+                <div class="setting-item">
+                    <label>BGM 音量</label>
+                    <input type="range" id="vol-bgm" min="0" max="1" step="0.1" value="0.3">
+                </div>
+                <div class="setting-item">
+                    <label>語音 音量</label>
+                    <input type="range" id="vol-voice" min="0" max="1" step="0.1" value="0.8">
+                </div>
+                <div class="setting-item">
+                    <label>音效 音量</label>
+                    <input type="range" id="vol-sfx" min="0" max="1" step="0.1" value="0.4">
+                </div>
+                <div class="setting-item">
+                    <label>文字顯示速度</label>
+                    <input type="range" id="vol-textspeed" min="1" max="10" step="1" value="6">
+                </div>
+                <button id="btn-save-game" class="drawer-btn">快速存檔</button>
+                <button id="btn-drawer-log" class="drawer-btn" style="margin-top: 5px;">回顧 (Log)</button>
+                <button id="btn-drawer-load" class="drawer-btn" style="margin-top: 5px;">讀取進度</button>
+                <button id="btn-drawer-skip" class="drawer-btn" style="margin-top: 5px;">快速跳過 (Skip)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 音頻播放器 -->
+    <audio id="bgm-player" loop></audio>
+    <audio id="voice-player"></audio>
+    <audio id="sfx-player"></audio>
+
+    <script src="js/day1.js"></script>
+    <script src="js/engine.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
