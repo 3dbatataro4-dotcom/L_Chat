@@ -1,0 +1,1240 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;900&family=Noto+Sans+TC:wght@300;400;700&display=swap');
+
+:root {
+    /* Otome Game Elegant Palette */
+    --primary-color: #8bbdc5;
+    /* Elegant grayish mint/blue */
+    --secondary-color: #b2d8d8;
+    /* Light mint */
+    --accent-gold: #d4af37;
+    /* Champagne Gold */
+    --bg-dark: #1a2228;
+    --bg-light: #fdfbf7;
+    /* Paper/Pearl white */
+    --text-main: #2c3e50;
+    --text-light: #ffffff;
+    --text-gold: #c5a059;
+    --font-title: 'Noto Serif TC', serif;
+    --font-text: 'Noto Sans TC', sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+}
+
+body {
+    background-color: #0c0c0c;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-family: var(--font-text);
+    overflow: hidden;
+    color: var(--text-main);
+}
+
+#game-container {
+    width: 100%;
+    max-width: 480px;
+    /* Mobile vertical */
+    height: 100%;
+    max-height: 900px;
+    background-color: var(--bg-light);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 0 30px rgba(139, 189, 197, 0.15);
+}
+
+/* ==========================================================================
+   SCREENS & TRANSITIONS
+   ========================================================================== */
+.screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+    flex-direction: column;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+}
+
+.screen.active {
+    display: flex;
+    opacity: 1;
+}
+
+/* ==========================================================================
+   TITLE SCREEN
+   ========================================================================== */
+#title-screen {
+    background: linear-gradient(180deg, var(--bg-light) 0%, #e6f0f0 100%);
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.title-logo {
+    font-family: var(--font-title);
+    font-size: 3.5rem;
+    font-weight: 900;
+    letter-spacing: 4px;
+    margin-bottom: 5px;
+    color: var(--text-main);
+    text-shadow: 2px 2px 10px rgba(212, 175, 55, 0.3);
+    z-index: 10;
+}
+
+.subtitle {
+    font-family: var(--font-title);
+    font-size: 1.2rem;
+    color: var(--text-gold);
+    margin-bottom: 80px;
+    z-index: 10;
+    letter-spacing: 6px;
+    border-bottom: 1px solid var(--accent-gold);
+    padding-bottom: 5px;
+}
+
+.menu-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    z-index: 10;
+    width: 65%;
+}
+
+.menu-buttons button {
+    padding: 16px 30px;
+    border-radius: 4px;
+    /* More elegant sharp/slight round edges */
+    border: 1px solid var(--accent-gold);
+    font-family: var(--font-title);
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.4s ease;
+    background: rgba(255, 255, 255, 0.5);
+    color: var(--text-gold);
+    letter-spacing: 2px;
+    position: relative;
+    overflow: hidden;
+}
+
+.menu-buttons button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.menu-buttons button:hover::before {
+    left: 100%;
+}
+
+.menu-buttons button:active {
+    background: var(--accent-gold);
+    color: #fff;
+}
+
+#btn-preload {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    opacity: 0.6;
+}
+
+/* Background Effects for Title */
+.bg-fx {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.dust {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: var(--accent-gold);
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--accent-gold);
+    animation: drift 10s infinite linear;
+    opacity: 0.5;
+}
+
+@keyframes drift {
+    0% {
+        transform: translateY(100vh) scale(0.5);
+        opacity: 0;
+    }
+
+    50% {
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: translateY(-10vh) scale(1.5);
+        opacity: 0;
+    }
+}
+
+/* ==========================================================================
+   UTILITIES
+   ========================================================================== */
+.hidden {
+    display: none !important;
+}
+
+/* Location Hint */
+#location-hint {
+    position: absolute;
+    top: 60px;
+    left: -300px;
+    padding: 8px 20px;
+    background: rgba(22, 30, 37, 0.85);
+    backdrop-filter: blur(8px);
+    border-left: 3px solid var(--accent-gold);
+    color: var(--text-light);
+    font-family: var(--font-title);
+    font-size: 1rem;
+    font-weight: 300;
+    letter-spacing: 2px;
+    box-shadow: 4px 4px 15px rgba(0, 0, 0, 0.3);
+    z-index: 500;
+    opacity: 0;
+    transition: all 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+#location-hint.show {
+    left: 0;
+    opacity: 1;
+}
+
+/* ==========================================================================
+   VN SCREEN
+   ========================================================================== */
+#vn-screen {
+    background-color: #000;
+}
+
+#vn-bg,
+#vn-bg-overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    transition: opacity 1.5s ease-in-out;
+}
+
+#vn-bg-overlay {
+    opacity: 0;
+}
+
+#vn-characters {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.character-sprite {
+    height: 90%;
+    max-width: 150%;
+    object-fit: contain;
+    transform-origin: bottom center;
+    transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+    filter: drop-shadow(0 0 15px rgba(0, 0, 0, 0.3));
+}
+
+.character-sprite.fade-in {
+    animation: spriteEnter 0.8s forwards cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes spriteEnter {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+#vn-dialogue-box {
+    position: absolute;
+    bottom: 12%;
+    left: 0;
+    width: 100%;
+    background: linear-gradient(180deg, rgba(253, 251, 247, 0.98) 0%, rgba(255, 255, 255, 0.85) 60%, rgba(255, 255, 255, 0) 100%);
+    backdrop-filter: blur(4px);
+    border: none;
+    border-radius: 0;
+    padding: 22px 20px 22px 145px;
+    min-height: 140px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    z-index: 200;
+    transition: opacity 0.5s ease;
+}
+
+#vn-top-menu {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 300;
+}
+
+#btn-vn-menu {
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.2s;
+}
+
+#btn-vn-menu:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.8);
+}
+
+#vn-dropdown-menu {
+    position: absolute;
+    top: 50px;
+    right: 0;
+    background: rgba(0, 0, 0, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-width: 100px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+}
+
+#vn-dropdown-menu button {
+    background: none;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    text-align: right;
+    font-size: 0.9rem;
+    font-family: var(--font-main);
+    cursor: pointer;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    transition: background 0.2s;
+}
+
+#vn-dropdown-menu button:last-child {
+    border-bottom: none;
+}
+
+#vn-dropdown-menu button:hover, #vn-dropdown-menu button.active {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+#vn-dialogue-box::after {
+    display: none;
+}
+
+#vn-name {
+    position: absolute;
+    top: -14px;
+    left: 25px;
+    /* Default position, will be overridden by JS when avatar is present */
+    background: var(--bg-light);
+    border: 1px solid var(--accent-gold);
+    color: var(--text-main);
+    padding: 3px 18px;
+    border-radius: 2px;
+    /* Restored square border */
+    font-family: var(--font-title);
+    font-weight: 600;
+    font-size: 0.95rem;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    letter-spacing: 1px;
+    transition: all 0.4s ease;
+    /* Smooth transition for position changes */
+    z-index: 13;
+}
+
+#vn-avatar {
+    position: absolute;
+    bottom: 0;
+    left: -15px;
+    width: 165px;
+    height: 220px;
+    background-size: contain;
+    background-position: bottom left;
+    background-repeat: no-repeat;
+    display: none;
+    z-index: 14;
+    /* Above the name box (z-index: 13) */
+    filter: drop-shadow(5px 5px 10px rgba(0, 0, 0, 0.25));
+}
+
+#vn-text {
+    font-size: 1.05rem;
+    /* Reduced font size */
+    color: var(--text-main);
+    line-height: 1.6;
+    text-align: justify;
+    font-weight: 400;
+    /* Slightly thicker for readability at smaller size */
+    text-shadow: 0px 0px 1px rgba(0, 0, 0, 0.05);
+}
+
+.continue-icon {
+    position: absolute;
+    bottom: 12px;
+    right: 20px;
+    color: var(--accent-gold);
+    font-size: 0.8rem;
+    animation: breathe 1.5s infinite;
+}
+
+@keyframes breathe {
+
+    0%,
+    100% {
+        opacity: 0.3;
+        transform: translateX(0);
+    }
+
+    50% {
+        opacity: 1;
+        transform: translateX(3px);
+    }
+}
+
+/* ==========================================================================
+   CHAT SCREEN (L-Chat)
+   ========================================================================== */
+#chat-screen {
+    background: linear-gradient(180deg, #1f2a33 0%, #12191f 100%);
+    color: var(--text-light);
+}
+
+.chat-header {
+    height: 70px;
+    background: rgba(22, 30, 37, 0.95);
+    backdrop-filter: blur(15px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    border-bottom: 1px solid rgba(139, 189, 197, 0.2);
+    z-index: 10;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.back-btn,
+.chat-menu {
+    color: var(--primary-color);
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+
+.chat-title {
+    font-family: var(--font-title);
+    font-weight: 600;
+    font-size: 1.15rem;
+    /* Reduced */
+    color: var(--text-light);
+    letter-spacing: 1px;
+}
+
+#chat-history {
+    flex: 1;
+    overflow-y: auto;
+    padding: 25px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    scroll-behavior: smooth;
+}
+
+.chat-msg {
+    max-width: 85%;
+    display: flex;
+    gap: 12px;
+    animation: msgFade 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.chat-msg.self {
+    align-self: flex-end;
+    flex-direction: row-reverse;
+}
+
+.chat-msg.other {
+    align-self: flex-start;
+}
+
+.msg-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    flex-shrink: 0;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.msg-bubble {
+    background: rgba(255, 255, 255, 0.08);
+    padding: 10px 15px;
+    border-radius: 16px;
+    border-top-left-radius: 4px;
+    font-size: 0.95rem;
+    /* Reduced */
+    line-height: 1.45;
+    font-weight: 300;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.chat-msg.self .msg-bubble {
+    background: linear-gradient(135deg, var(--primary-color) 0%, #6fa0a8 100%);
+    color: #fff;
+    border-top-left-radius: 18px;
+    border-top-right-radius: 4px;
+    border: none;
+    box-shadow: 0 4px 12px rgba(139, 189, 197, 0.2);
+}
+
+@keyframes msgFade {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Typing Indicator Animation */
+.typing-indicator {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 12px 18px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    border-top-left-radius: 4px;
+}
+
+.typing-indicator span {
+    display: block;
+    width: 6px;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 50%;
+    animation: typingBounce 1.4s infinite ease-in-out both;
+}
+
+.typing-indicator span:nth-child(1) {
+    animation-delay: -0.32s;
+}
+
+.typing-indicator span:nth-child(2) {
+    animation-delay: -0.16s;
+}
+
+@keyframes typingBounce {
+
+    0%,
+    80%,
+    100% {
+        transform: scale(0);
+    }
+
+    40% {
+        transform: scale(1);
+    }
+}
+
+.chat-input-area {
+    min-height: 80px;
+    background: rgba(22, 30, 37, 0.98);
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    border-top: 1px solid rgba(139, 189, 197, 0.2);
+}
+
+.input-box {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.4);
+    min-height: 40px;
+    border-radius: 20px;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    color: #fff;
+    border: 1px solid rgba(139, 189, 197, 0.3);
+    font-size: 0.95rem;
+    /* Reduced */
+    font-weight: 300;
+}
+
+.send-btn {
+    background: transparent;
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+    border-radius: 22px;
+    padding: 0 20px;
+    height: 44px;
+    font-family: var(--font-text);
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.send-btn:active {
+    background: var(--primary-color);
+    color: #fff;
+}
+
+.pulse-highlight {
+    animation: sendPulse 1s infinite alternate;
+    background: var(--primary-color) !important;
+    color: #fff !important;
+}
+
+@keyframes sendPulse {
+    from { box-shadow: 0 0 5px var(--primary-color); }
+    to { box-shadow: 0 0 15px var(--primary-color); transform: scale(1.05); }
+}
+
+/* ==========================================================================
+   QTE OVERLAY & ATMOSPHERE
+   ========================================================================== */
+#qte-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(20, 0, 0, 0.7) 0%, rgba(40, 0, 0, 0.95) 100%);
+    z-index: 250;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 30px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+}
+
+#qte-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.spore-glitch {
+    animation: sporePulse 0.5s infinite alternate, screenShake 0.4s infinite;
+    mix-blend-mode: hard-light;
+}
+
+@keyframes sporePulse {
+    0% {
+        box-shadow: inset 0 0 50px rgba(255, 0, 0, 0.2);
+        filter: hue-rotate(0deg) contrast(1.2);
+    }
+
+    100% {
+        box-shadow: inset 0 0 150px rgba(255, 0, 0, 0.6);
+        filter: hue-rotate(-20deg) contrast(1.5);
+    }
+}
+
+@keyframes screenShake {
+    0% {
+        transform: translate(1px, 1px) rotate(0deg);
+    }
+
+    10% {
+        transform: translate(-1px, -2px) rotate(-1deg);
+    }
+
+    20% {
+        transform: translate(-3px, 0px) rotate(1deg);
+    }
+
+    30% {
+        transform: translate(3px, 2px) rotate(0deg);
+    }
+
+    40% {
+        transform: translate(1px, -1px) rotate(1deg);
+    }
+
+    50% {
+        transform: translate(-1px, 2px) rotate(-1deg);
+    }
+
+    60% {
+        transform: translate(-3px, 1px) rotate(0deg);
+    }
+
+    70% {
+        transform: translate(3px, 1px) rotate(-1deg);
+    }
+
+    80% {
+        transform: translate(-1px, -1px) rotate(1deg);
+    }
+
+    90% {
+        transform: translate(1px, 2px) rotate(0deg);
+    }
+
+    100% {
+        transform: translate(1px, -2px) rotate(-1deg);
+    }
+}
+
+.qte-timer-bar {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    margin-bottom: 15px;
+    overflow: hidden;
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+}
+
+.qte-timer-fill {
+    height: 100%;
+    width: 100%;
+    background: #ff3333;
+    transition: width 0.1s linear;
+    box-shadow: 0 0 10px #ff3333;
+}
+
+.qte-timer-text {
+    font-family: var(--font-title);
+    font-size: 2rem;
+    font-weight: 900;
+    color: #ff3333;
+    text-shadow: 0 0 15px rgba(255, 0, 0, 0.8);
+    margin-bottom: 20px;
+    letter-spacing: 2px;
+}
+
+.qte-content {
+    background: rgba(20, 20, 20, 0.95);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 77, 77, 0.5);
+    border-radius: 12px;
+    padding: 30px 20px;
+    text-align: center;
+    width: 100%;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+#qte-draft-display {
+    font-family: var(--font-text);
+    font-size: 1.1rem;
+    color: #fff;
+    background: #000;
+    border: 1px solid #ff3333;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 6px;
+    text-align: left;
+    min-height: 80px;
+    box-shadow: inset 0 0 10px rgba(255, 0, 0, 0.3);
+}
+
+#qte-instruction {
+    font-family: var(--font-title);
+    font-size: 1.25rem;
+    margin-bottom: 30px;
+    color: #ffcccc;
+    text-shadow: 0 0 8px rgba(255, 0, 0, 0.8);
+    font-weight: 900;
+    letter-spacing: 2px;
+    line-height: 1.6;
+    padding: 15px;
+    background: rgba(100, 0, 0, 0.4);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 50, 50, 0.5);
+}
+
+.qte-option-btn {
+    display: block;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 14px;
+    margin-bottom: 12px;
+    border-radius: 6px;
+    font-size: 1rem;
+    /* Reduced */
+    font-family: var(--font-text);
+    font-weight: 300;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.qte-option-btn:hover,
+.qte-option-btn:active {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: var(--accent-gold);
+    color: var(--accent-gold);
+}
+
+#qte-backspace-btn {
+    background: rgba(200, 0, 0, 0.8);
+    color: white;
+    border: 2px solid #ff3333;
+    padding: 15px 30px;
+    border-radius: 8px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    width: 100%;
+    cursor: pointer;
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.6);
+    transition: all 0.1s;
+    text-shadow: 0 0 5px white;
+    animation: heartbeat 1s infinite;
+}
+
+#qte-backspace-btn:active {
+    transform: scale(0.95);
+    background: #ff0000;
+}
+
+@keyframes heartbeat {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+/* System Modal (Tutorials / Saves) */
+#system-modal {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+    z-index: 200;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+
+#system-modal.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-content {
+    background: var(--bg-light);
+    border: 1px solid var(--accent-gold);
+    padding: 30px;
+    border-radius: 8px;
+    width: 85%;
+    text-align: center;
+    color: var(--text-main);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+}
+
+#modal-title {
+    font-family: var(--font-title);
+    color: var(--text-gold);
+    margin-bottom: 15px;
+    font-size: 1.4rem;
+}
+
+#modal-body {
+    font-weight: 300;
+    line-height: 1.6;
+    margin-bottom: 25px;
+}
+
+#modal-close {
+    padding: 12px 35px;
+    background: transparent;
+    color: var(--text-gold);
+    border: 1px solid var(--accent-gold);
+    border-radius: 4px;
+    font-family: var(--font-text);
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+#modal-close:active {
+    background: var(--accent-gold);
+    color: #fff;
+}
+
+/* ==========================================================================
+   DRAWER SETTINGS UI
+   ========================================================================== */
+.drawer {
+    position: absolute;
+    top: 20px;
+    right: -250px;
+    width: 250px;
+    background: rgba(253, 251, 247, 0.95);
+    backdrop-filter: blur(5px);
+    box-shadow: -5px 0 20px rgba(0, 0, 0, 0.2);
+    padding-bottom: 20px;
+    border-radius: 8px 0 0 8px;
+    transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 9999;
+    color: var(--text-main);
+    border: 1px solid var(--accent-gold);
+}
+
+.drawer.open {
+    right: 0;
+}
+
+.drawer-handle {
+    position: absolute;
+    top: 10px;
+    left: -40px;
+    width: 40px;
+    height: 40px;
+    background: rgba(253, 251, 247, 0.95);
+    border: 1px solid var(--accent-gold);
+    border-right: none;
+    border-radius: 8px 0 0 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.4rem;
+    font-weight: 300;
+    font-family: sans-serif;
+    color: var(--text-main);
+    cursor: pointer;
+    box-shadow: -5px 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.drawer-content {
+    padding: 20px;
+}
+
+.drawer-title {
+    font-family: var(--font-title);
+    color: var(--text-gold);
+    margin-bottom: 20px;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+    padding-bottom: 5px;
+    letter-spacing: 2px;
+}
+
+.setting-item {
+    margin-bottom: 15px;
+}
+
+.setting-item label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.setting-item input[type=range] {
+    width: 100%;
+    accent-color: var(--accent-gold);
+}
+
+.drawer-btn {
+    width: 100%;
+    margin-top: 15px;
+    padding: 10px;
+    background: transparent;
+    border: 1px solid var(--accent-gold);
+    color: var(--text-gold);
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: var(--font-title);
+    transition: all 0.3s;
+}
+
+.drawer-btn:active {
+    background: var(--accent-gold);
+    color: #fff;
+}
+
+/* ==========================================================================
+   FADE OUT TEXT SCREEN
+   ========================================================================== */
+#fade-screen {
+    background: #fdfbf7;
+    justify-content: center;
+    align-items: center;
+    color: var(--text-gold);
+    font-family: var(--font-title);
+    font-size: 1.5rem;
+    letter-spacing: 3px;
+    text-align: center;
+    z-index: 500;
+}
+
+#fade-text {
+    opacity: 1;
+    padding: 20px;
+    line-height: 1.8;
+    text-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+}
+
+.fade-line-1 {
+    display: inline-block;
+    opacity: 0;
+    animation: fadeSurvival 6s forwards;
+}
+
+.fade-line-2 {
+    display: inline-block;
+    opacity: 0;
+    animation: fadeSurvival 6s forwards 1.5s;
+}
+
+@keyframes fadeSurvival {
+    0% { opacity: 0; transform: translateY(20px); filter: blur(5px); }
+    30% { opacity: 1; transform: translateY(0); filter: blur(0); }
+    70% { opacity: 1; transform: translateY(0); filter: blur(0); }
+    100% { opacity: 0; transform: translateY(-20px); filter: blur(5px); }
+}
+
+/* ==========================================================================
+   BAD END SCREEN
+   ========================================================================== */
+#be-screen {
+    background: #fff;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    z-index: 600;
+    animation: flashBg 0.1s infinite alternate;
+}
+
+@keyframes flashBg {
+    from { background: #fff; }
+    to { background: #fdfbf7; }
+}
+
+.btn-be-return {
+    background: transparent;
+    border: 2px solid #ff3333;
+    color: #ff3333;
+    padding: 15px 40px;
+    font-size: 1.2rem;
+    font-family: var(--font-main);
+    cursor: pointer;
+    transition: all 0.3s;
+    text-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
+    box-shadow: 0 0 15px rgba(255, 0, 0, 0.2), inset 0 0 10px rgba(255, 0, 0, 0.1);
+    border-radius: 4px;
+}
+
+.btn-be-return:hover {
+    background: rgba(255, 51, 51, 0.1);
+    box-shadow: 0 0 25px rgba(255, 0, 0, 0.4), inset 0 0 15px rgba(255, 0, 0, 0.3);
+}
+
+.btn-be-return:active {
+    background: #ff3333;
+    color: #fff;
+}
+
+#be-subtext {
+    font-size: 1.2rem; 
+    color: #000; 
+    margin-top: 20px;
+    opacity: 0;
+    animation: fadeIn 2s forwards 1s;
+}
+
+@keyframes fadeIn {
+    to { opacity: 1; }
+}
+
+.glitch-text-be {
+    font-family: var(--font-title);
+    font-size: 4rem;
+    font-weight: bold;
+    color: #000;
+    position: relative;
+    animation: glitchText 2s infinite;
+}
+
+.glitch-text-be::before,
+.glitch-text-be::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+.glitch-text-be::before {
+    left: 2px;
+    text-shadow: -2px 0 rgba(255,0,0,0.8);
+    clip: rect(24px, 550px, 90px, 0);
+    animation: glitchAnim2 3s infinite linear alternate-reverse;
+}
+.glitch-text-be::after {
+    left: -2px;
+    text-shadow: -2px 0 rgba(0,0,255,0.8);
+    clip: rect(85px, 550px, 140px, 0);
+    animation: glitchAnim 2.5s infinite linear alternate-reverse;
+}
+
+@keyframes glitchAnim {
+    0% { clip: rect(10px, 9999px, 44px, 0); }
+    20% { clip: rect(66px, 9999px, 92px, 0); }
+    40% { clip: rect(10px, 9999px, 20px, 0); }
+    60% { clip: rect(50px, 9999px, 100px, 0); }
+    80% { clip: rect(30px, 9999px, 70px, 0); }
+    100% { clip: rect(80px, 9999px, 90px, 0); }
+}
+
+@keyframes glitchAnim2 {
+    0% { clip: rect(60px, 9999px, 10px, 0); }
+    20% { clip: rect(20px, 9999px, 80px, 0); }
+    40% { clip: rect(80px, 9999px, 20px, 0); }
+    60% { clip: rect(10px, 9999px, 40px, 0); }
+    80% { clip: rect(90px, 9999px, 50px, 0); }
+    100% { clip: rect(30px, 9999px, 100px, 0); }
+}
+
+/* ==========================================================================
+   LOG UI
+   ========================================================================== */
+.top-left-btn {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 100;
+    background: rgba(253, 251, 247, 0.8);
+    border: 1px solid var(--accent-gold);
+    color: var(--text-gold);
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: var(--font-main);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: all 0.3s;
+}
+
+.top-left-btn:active {
+    background: var(--accent-gold);
+    color: #fff;
+}
+
+#log-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(253, 251, 247, 0.95);
+    z-index: 9000;
+    display: flex;
+    flex-direction: column;
+}
+
+#log-overlay.hidden {
+    display: none;
+}
+
+.log-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+    color: var(--text-gold);
+    position: relative;
+}
+
+.log-header h3 {
+    margin: 0;
+    font-family: var(--font-title);
+    font-size: 1.5rem;
+}
+
+#btn-close-log {
+    background: none; border: none; font-size: 1.2rem; color: var(--text-gold);
+    cursor: pointer; padding: 0 10px;
+}
+
+#log-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.log-item {
+    margin-bottom: 20px;
+    border-bottom: 1px dashed rgba(212, 175, 55, 0.3);
+    padding-bottom: 10px;
+}
+
+.log-name {
+    font-weight: bold;
+    color: var(--text-gold);
+    margin-bottom: 5px;
+}
+
+.log-text {
+    color: var(--text-main);
+    line-height: 1.5;
+}
+
+.log-voice-btn {
+    background: none;
+    border: 1px solid var(--accent-gold);
+    color: var(--text-gold);
+    border-radius: 50%;
+    width: 25px; height: 25px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    margin-left: 10px;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
