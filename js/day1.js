@@ -3,6 +3,7 @@ const Day1Script = [
     {
         type: "bg",
         src: "", // Black bg
+        bgm: "assets/audio/bgm/day1開場.mp3"
     },
     {
         type: "dialogue",
@@ -46,9 +47,16 @@ const Day1Script = [
     {
         type: "dialogue",
         name: "雨果",
-        text: "因為過高的道德感，我把這份骯髒的妄想鎖在大腦最深處。只要我不說、不表現出來，在現實中維持面癱，這份感情就會安靜地跟著我畢業。",
+        text: "因為過高的道德感，我把這份骯髒的妄想鎖在大腦最深處。",
         avatar: "assets/img/cha/雨果_頭像_忍耐.png",
         voice: "assets/audio/voice/day1_語音/006因為道德感，我把這份骯髒的妄想鎖在大腦最深處。.wav"
+    },
+    {
+        type: "dialogue",
+        name: "雨果",
+        text: "只要我不說、不表現出來，在現實中維持面癱，這份感情就會安靜地跟著我畢業。",
+        avatar: "assets/img/cha/雨果_頭像_忍耐.png",
+        voice: "assets/audio/voice/day1_語音/007只要我不說、不表現出來，在現實中維持面癱，這份感情就會安靜地跟著我畢業。.wav"
     },
     {
         type: "dialogue",
@@ -143,7 +151,7 @@ const Day1Script = [
         type: "dialogue",
         name: "雨果",
         text: "沒、沒事。學長不用道歉。",
-        avatar: "assets/img/cha/雨果_羞憤交加.png",
+        avatar: "assets/img/cha/雨果_頭像_羞憤交加.png",
         voice: "assets/audio/voice/day1_語音/013沒、沒事。學長不用道歉。.wav"
     },
     {
@@ -239,13 +247,18 @@ const Day1Script = [
         avatar: "assets/img/cha/雨果_頭像_平常.png",
         voice: "assets/audio/voice/雨果_困擾.wav"
     },
-    {
-        type: "transition",
-        to: "CHAT"
-    },
+    { type: "transition", to: "CHAT" },
+    { type: "chat_tutorial", text: "【系統提示】<br>請點擊進入「生物社群組」。" },
+    { type: "wait_for_chat", chatId: "group" },
+    { type: "delay", time: 1.0 },
     {
         type: "sfx",
         src: "assets/audio/sfx/收到訊息.mp3"
+    },
+    {
+        type: "chat_separator",
+        targetChat: "group",
+        text: "今天 晚上 9:45"
     },
     {
         type: "chat_msg",
@@ -319,18 +332,33 @@ const Day1Script = [
         src: "assets/audio/sfx/收到訊息.mp3"
     },
     {
+        type: "chat_separator",
+        targetChat: "lucas",
+        text: "今天 晚上 10:15"
+    },
+    {
+        type: "chat_msg",
+        targetChat: "lucas",
+        sender: "盧卡斯",
+        avatar: "assets/img/chat_img/聊天頭像_盧卡斯.png",
+        text: "雨果，還好嗎？今天看你走得匆忙。如果是因為我的疏忽讓你吸入了不舒服的粉末，我真的很抱歉。"
+    },
+    {
+        type: "chat_tutorial",
+        text: "【系統提示：收到新私訊！】<br>請點擊左上角的「&lt;」返回聊天列表，並進入盧卡斯的對話框查看。"
+    },
+    {
+        type: "wait_for_chat",
+        chatId: "lucas"
+    },
+    {
         type: "dialogue",
         name: "旁白",
         text: "這次是私訊。頭像是一個帶著半框眼鏡的溫和側臉。"
     },
     {
         type: "chat_msg",
-        sender: "盧卡斯",
-        avatar: "assets/img/chat_img/聊天頭像_盧卡斯.png",
-        text: "雨果，還好嗎？今天看你走得匆忙。如果是因為我的疏忽讓你吸入了不舒服的粉末，我真的很抱歉。"
-    },
-    {
-        type: "chat_msg",
+        targetChat: "lucas",
         sender: "盧卡斯",
         avatar: "assets/img/chat_img/聊天頭像_盧卡斯.png",
         text: "早點休息，如果明天還是不舒服，可以隨時打給我。"
@@ -345,19 +373,19 @@ const Day1Script = [
     {
         type: "dialogue",
         name: "雨果",
-        text: "糟了……我怎麼又控制不了……這該死的破手！",
+        text: "糟了……我突然控制不了自己的手……！",
         avatar: "assets/img/cha/雨果_頭像_緊張.png",
         voice: "assets/audio/voice/雨果_驚嚇.wav"
     },
     {
         type: "chat_tutorial",
-        text: "【系統警告：高濃度危險源靠近！理智崩潰邊緣！】<br>目標：時間縮短為 5 秒！快速連打刪除羞恥文字！"
+        text: "<div class='qte-instruction bounce-in'><h4>【極限潛意識消除】</h4><p>請在時限內快速點擊或按下 <b>Backspace</b> 鍵，消除以下危險發言！</p><div class='danger-box popup-shake' style='animation: popup-shake 0.5s infinite;'>「學長……我現在好熱，閉上眼睛都是你今天低頭看我的樣子……」</div></div>"
     },
     {
         type: "chat_qte_delete",
         draft: "學長……我現在好熱，閉上眼睛都是你今天低頭看我的樣子，你可以現在就打給我嗎，用你那種氣泡音叫我的名字……",
         target: "謝謝學長，我沒事，只是需要睡眠。學長也早點休息。",
-        time: 8,
+        time: 5,
         checkpoints: [
             {
                 maxLength: 9,
@@ -379,6 +407,7 @@ const Day1Script = [
     },
     {
         type: "chat_msg",
+        targetChat: "lucas",
         sender: "雨果",
         avatar: "assets/img/chat_img/聊天頭像_雨果.png",
         text: "謝謝學長，我沒事，只是需要睡眠。學長也早點休息。"
@@ -389,6 +418,7 @@ const Day1Script = [
     },
     {
         type: "chat_msg",
+        targetChat: "lucas",
         sender: "盧卡斯",
         avatar: "assets/img/chat_img/聊天頭像_盧卡斯.png",
         text: "好，晚安，好夢。"
@@ -403,10 +433,15 @@ const Day1Script = [
         name: "雨果",
         text: "還剩六天……我真的能活到下禮拜嗎……",
         avatar: "assets/img/cha/雨果_頭像_絕望.png",
-        voice: "assets/audio/voice/雨果_嘆氣.wav"
+        voice: "assets/audio/voice/雨果_嘆氣.wav",
+        stopBgm: true,
     },
     {
         type: "fade_text",
         text: "<span class='fade-line-1'>Day 1 存活確認。</span><br><br><span class='fade-line-2'>理智值剩餘：85%</span>"
+    },
+    {
+        type: "end_day",
+        day: 1
     }
 ];
