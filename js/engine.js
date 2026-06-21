@@ -61,13 +61,24 @@ class GameEngine {
         this.bindEvents();
     }
 
+    requestFullscreen() {
+        const doc = document.documentElement;
+        if (doc.requestFullscreen) {
+            doc.requestFullscreen().catch(() => {});
+        } else if (doc.webkitRequestFullscreen) {
+            doc.webkitRequestFullscreen();
+        }
+    }
+
     bindEvents() {
         // Mode Selection
         document.getElementById('btn-mode-local').addEventListener('click', () => {
+            this.requestFullscreen();
             this.assetMode = 'local';
             this.showScreen('title');
         });
         document.getElementById('btn-mode-online').addEventListener('click', () => {
+            this.requestFullscreen();
             this.assetMode = 'online';
             this.showScreen('title');
         });
