@@ -1,21 +1,30 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#C4E7F5">
     <title>L-Chat: 心跳隱蔽協議</title>
-    <link rel="icon" type="image/png" href="assets/img/icon.png">
-    <link rel="stylesheet" href="css/main.css">
+    <link rel="icon" type="image/png" href="https://file.garden/aWe99vhwaGcNwkok/L_Chat/assets/img/icon.png">
+    <link rel="stylesheet" href="css/main.css?v=2">
 </head>
+
 <body>
     <div id="game-container">
         <!-- 運行模式選擇畫面 -->
-        <div id="mode-screen" class="screen active" style="z-index: 10000; background: #fdfbf7; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
-            <h2 style="font-family: var(--font-title); color: var(--text-gold); font-size: 2rem; margin-bottom: 30px; letter-spacing: 2px;">請選擇素材加載模式</h2>
+        <div id="mode-screen" class="screen active"
+            style="z-index: 10000; background: #fdfbf7; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+            <h2
+                style="font-family: var(--font-title); color: var(--text-gold); font-size: 2rem; margin-bottom: 30px; letter-spacing: 2px;">
+                請選擇素材加載模式</h2>
             <div class="menu-buttons" style="width: 250px; align-items: center;">
-                <button id="btn-mode-local" class="btn-primary" style="width: 100%; color: var(--text-gold); background: transparent;">本地運行 (Local)</button>
-                <button id="btn-mode-online" class="btn-primary" style="width: 100%; color: var(--text-gold); background: transparent;">線上運行 (Online)</button>
+                <button id="btn-mode-local" class="btn-primary"
+                    style="width: 100%; color: var(--text-gold); background: transparent;">本地運行 (Local)</button>
+                <button id="btn-mode-online" class="btn-primary"
+                    style="width: 100%; color: var(--text-gold); background: transparent;">線上運行 (Online)</button>
             </div>
             <p style="margin-top: 20px; font-size: 0.9rem; color: #666; max-width: 80%; line-height: 1.5;">
                 *若為開發測試，請選擇「本地運行」。<br>
@@ -25,11 +34,20 @@
 
         <!-- 場景提示 -->
         <div id="location-hint"></div>
+        <!-- 跳過提示 -->
+        <div id="skip-indicator" class="skip-indicator hidden">跳過中...</div>
         <!-- 標題畫面 -->
         <div id="title-screen" class="screen">
             <h1 class="title-logo">L-Chat</h1>
             <p class="subtitle">心跳隱蔽協議</p>
             <div class="menu-buttons">
+                <div style="display: flex; gap: 10px; width: 100%; margin-bottom: 15px;">
+                    <select id="day-select" class="btn-secondary"
+                        style="flex: 1; padding: 10px; background: rgba(139, 189, 197, 0.2); color: var(--text-gold); border: 1px solid var(--accent-gold); border-radius: 8px;">
+                        <option value="1">從 Day 1 開始</option>
+                        <option value="2">從 Day 2 開始</option>
+                    </select>
+                </div>
                 <button id="btn-start" class="btn-primary">開始遊戲</button>
                 <button id="btn-load" class="btn-secondary">讀取進度</button>
                 <button id="btn-preload" class="btn-secondary">預加載全部素材</button>
@@ -55,7 +73,8 @@
         <div id="log-overlay" class="hidden">
             <div class="log-header">
                 <h3>對話回顧</h3>
-                <button id="btn-close-log" class="top-left-btn" style="position: absolute; left: 20px; top: 20px; z-index: 100;">＜ 返回</button>
+                <button id="btn-close-log" class="top-left-btn"
+                    style="position: absolute; left: 20px; top: 20px; z-index: 100;">＜ 返回</button>
             </div>
             <div id="log-content"></div>
         </div>
@@ -77,25 +96,70 @@
 
         <!-- L-Chat 介面 -->
         <div id="chat-screen" class="screen">
-            <div class="chat-header">
-                <div class="back-btn">&lt;</div>
-                <div class="chat-title">L-Chat</div>
-                <div class="chat-menu">...</div>
-            </div>
-            <div id="chat-history"></div>
-            
-            <!-- 聊天輸入區 -->
-            <div class="chat-input-area">
-                <div class="input-box" id="chat-input-box">
-                    <span id="chat-input-text"></span>
-                    <span class="cursor">|</span>
+            <!-- 聊天列表視窗 -->
+            <div id="chat-list-view" class="chat-view active">
+                <div class="chat-header">
+                    <div class="chat-title" style="flex: 1; text-align: center;">L-Chat 訊息</div>
                 </div>
-                <button class="send-btn" id="chat-send-btn">發送</button>
+                <div id="chat-list-items"></div>
             </div>
 
-            <!-- QTE 覆蓋層 -->
+            <!-- 單一聊天視窗 -->
+            <div id="chat-conversation-view" class="chat-view">
+                <div class="chat-header">
+                    <div class="back-btn" id="chat-back-btn">&lt;</div>
+                    <div class="chat-title">生物社群組</div>
+                </div>
+                <div class="chat-history-container">
+                    <div id="chat-history" class="chat-history"></div>
+
+                    <!-- 聊天輸入區 -->
+                    <div class="chat-input-area">
+                        <div class="input-box" id="chat-input-box">
+                            <span id="chat-input-text"></span>
+                            <span class="cursor">|</span>
+                        </div>
+                        <button class="send-btn" id="chat-send-btn">發送</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 論壇 (動態) 視窗 -->
+            <div id="forum-view" class="chat-view">
+                <div class="forum-stories-container">
+                    <div class="story-progress-bars" id="story-progress-bars"></div>
+                    <div class="story-content" id="story-content">
+                        <img id="story-image-bg" src="" alt="">
+                        <img id="story-image" src="" alt="Story Image">
+                        <div class="story-text-overlay" id="story-text"></div>
+                        <div class="story-header">
+                            <div class="story-avatar" id="story-avatar"></div>
+                            <div class="story-author" id="story-author"></div>
+                        </div>
+                    </div>
+                    <!-- Navigation click areas -->
+                    <div class="story-nav-left" id="story-nav-left"></div>
+                    <div class="story-nav-right" id="story-nav-right"></div>
+                </div>
+            </div>
+
+            <!-- 底部分頁導航列 -->
+            <div id="lchat-bottom-nav" style="display: none; position: absolute; bottom: 0; width: 100%; z-index: 50;">
+                <div class="nav-item active" id="nav-chat">
+                    <span class="nav-icon">💬</span>
+                    <span class="nav-text">聊天</span>
+                </div>
+                <div class="nav-item" id="nav-forum">
+                    <span class="nav-icon">🌐</span>
+                    <span class="nav-text">動態</span>
+                </div>
+            </div>
+
+            <!-- QTE 覆蓋層 (共用) -->
             <div id="qte-overlay">
-                <div class="qte-timer-bar"><div class="qte-timer-fill" id="qte-timer-fill"></div></div>
+                <div class="qte-timer-bar">
+                    <div class="qte-timer-fill" id="qte-timer-fill"></div>
+                </div>
                 <div id="qte-timer-text" class="qte-timer-text">08.0s</div>
                 <div class="qte-content">
                     <p id="qte-instruction"></p>
@@ -103,6 +167,84 @@
                     <div id="qte-options" style="display: none;"></div>
                     <button id="qte-backspace-btn" style="display: none;">狂按下方【刪除】按鈕！</button>
                 </div>
+            </div>
+
+            <!-- 右半屏變異干擾 -->
+            <div id="spore-glitch-right" class="spore-glitch-right"></div>
+
+            <!-- 學術防禦 QTE 覆蓋層 -->
+            <div id="qte-academic-overlay" class="hidden">
+                <div class="qte-glitch-lucas"></div>
+                <div class="qte-timer-bar">
+                    <div class="qte-timer-fill" id="qte-academic-timer-fill"></div>
+                </div>
+                <div class="qte-content">
+                    <div id="qte-academic-options"></div>
+                </div>
+            </div>
+
+            <!-- 理智防守 QTE (Forum Sanity) 覆蓋層 -->
+            <div id="qte-forum-sanity" class="hidden">
+                <div class="sanity-vignette"></div>
+                <div class="sanity-instruction">長按【深呼吸】抑制衝動！點擊消除泡泡！</div>
+                <div class="sanity-progress-container">
+                    <div class="sanity-progress-fill" id="sanity-progress-fill"></div>
+                </div>
+                <button id="sanity-hold-btn">深呼吸 (HOLD)</button>
+                <div id="sanity-bubbles-container"></div>
+            </div>
+        </div>
+
+        <!-- 來電節律 QTE Screen -->
+        <div id="call-screen" class="screen">
+            <!-- 傳入來電介面 -->
+            <div id="incoming-call-ui" style="position:absolute; top:0; left:0; width:100%; height:100%; background: linear-gradient(180deg, #1f2a33 0%, #12191f 100%); z-index: 5010; display: none; flex-direction: column; align-items: center; justify-content: space-evenly;">
+                <div style="text-align: center;">
+                    <div id="incoming-avatar" style="width: 120px; height: 120px; border-radius: 50%; background-size: cover; background-position: center; margin: 0 auto 20px; border: 3px solid rgba(255,255,255,0.2);"></div>
+                    <div id="incoming-name" style="font-size: 1.8rem; font-weight: bold; margin-bottom: 10px;"></div>
+                    <div style="font-size: 1.1rem; opacity: 0.8;">語音通話來電...</div>
+                </div>
+                <div style="display: flex; gap: 60px;">
+                    <div id="btn-decline-call" style="display: flex; flex-direction: column; align-items: center; cursor: pointer;">
+                        <div style="width: 65px; height: 65px; border-radius: 50%; background: #f44336; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 15px rgba(244,67,54,0.4); margin-bottom: 10px;">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="white"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08c-.18-.17-.29-.42-.29-.7 0-.28.11-.53.29-.71C3.34 8.78 7.46 7 12 7s8.66 1.78 11.71 4.67c.18.18.29.43.29.71 0 .28-.11.52-.29.71l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.11-.7-.28-.79-.74-1.69-1.36-2.67-1.85-.33-.16-.56-.5-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/></svg>
+                        </div>
+                        <span style="font-size: 0.9rem;">拒絕</span>
+                    </div>
+                    <div id="btn-accept-call" style="display: flex; flex-direction: column; align-items: center; cursor: pointer;">
+                        <div style="width: 65px; height: 65px; border-radius: 50%; background: #4caf50; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 15px rgba(76,175,80,0.4); margin-bottom: 10px; animation: pulse-green 1.5s infinite;">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="white"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+                        </div>
+                        <span style="font-size: 0.9rem;">接聽</span>
+                    </div>
+                </div>
+                <div id="decline-toast" style="position: absolute; bottom: 15%; padding: 10px 20px; background: rgba(0,0,0,0.8); border-radius: 20px; font-size: 0.95rem; opacity: 0; transition: opacity 0.3s; pointer-events: none;">不行……不能不接！</div>
+            </div>
+            
+            <div class="call-top">
+                <div class="call-avatar"></div>
+                <div class="call-name">莫弈</div>
+                <div class="call-status">通話中 00:00</div>
+            </div>
+
+            <div class="call-bottom">
+                <div class="ecg-container">
+                    <div class="ecg-gradient"></div>
+                    <div id="rhythm-ecg-marker" class="ecg-marker"></div>
+                </div>
+
+                <div id="rhythm-call-subtitles" class="call-subtitles"></div>
+
+                <div class="call-controls">
+                    <button id="rhythm-breath-btn" class="call-breath-btn">
+                        <span class="breath-icon"></span>
+                        深呼吸
+                    </button>
+                </div>
+            </div>
+
+            <!-- 選擇分歧介面 -->
+            <div id="call-choices-container" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5500; flex-direction: column; justify-content: center; align-items: center; gap: 20px; background: rgba(0,0,0,0.6);">
             </div>
         </div>
 
@@ -149,8 +291,13 @@
     <audio id="voice-player"></audio>
     <audio id="sfx-player"></audio>
 
-    <script src="js/day1.js"></script>
+    <script src="js/day1.js?v=2"></script>
+    <script src="js/day2.js?v=2"></script>
+    <script src="js/chat_system.js"></script>
+    <script src="js/forum_system.js"></script>
+    <script src="js/call_system.js"></script>
     <script src="js/engine.js"></script>
     <script src="js/main.js"></script>
 </body>
+
 </html>
