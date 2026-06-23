@@ -313,9 +313,10 @@ class ForumSystem {
                 popup.style.overflow = 'hidden';
                 popup.style.zIndex = '10';
                 popup.style.borderLeft = '6px solid #e74c3c';
+                popup.style.maxWidth = '85%'; // prevent horizontal overflow
 
                 const top = Math.random() * 60 + 10;
-                const left = Math.random() * 40 + 10;
+                const left = Math.random() * 15 + 5; // keep left side bounded to prevent right cutoff
                 popup.style.top = `${top}%`;
                 popup.style.left = `${left}%`;
 
