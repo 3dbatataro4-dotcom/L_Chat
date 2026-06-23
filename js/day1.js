@@ -433,12 +433,15 @@ const Day1Script = [
         name: "雨果",
         text: "還剩六天……我真的能活到下禮拜嗎……",
         avatar: "assets/img/cha/雨果_頭像_絕望.png",
-        voice: "assets/audio/voice/雨果_嘆氣.wav",
-        stopBgm: true,
+        voice: "assets/audio/voice/雨果_嘆氣.wav"
     },
     {
         type: "fade_text",
         text: "<span class='fade-line-1'>Day 1 存活確認。</span><br><br><span class='fade-line-2'>理智值剩餘：85%</span>"
+    },
+    {
+        type: "delay", time: 8,
+        stopBgm: true,
     },
     {
         type: "end_day",
