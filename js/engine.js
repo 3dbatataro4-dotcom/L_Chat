@@ -55,7 +55,10 @@ class GameEngine {
             "艾薇": { bg: "#C1F5EF", text: "#2c3e50" },
             "盧卡斯": { bg: "#E88B72", text: "#ffffff" },
             "雨果": { bg: "#917EA8", text: "#ffffff" },
-            "旁白": { bg: "rgba(255, 255, 255, 0.8)", text: "#2c3e50" }
+            "旁白": { bg: "rgba(255, 255, 255, 0.8)", text: "#2c3e50" },
+            "蜜拉思": { bg: "#4a2c5a", text: "#ffffff" },
+            "蜜拉思老師": { bg: "#4a2c5a", text: "#ffffff" },
+            "盧卡斯學長": { bg: "#E88B72", text: "#ffffff" }
         };
 
         this.bindEvents();
@@ -374,6 +377,8 @@ class GameEngine {
                 this.currentScript = Day1Script;
             } else if (day === 2 && typeof Day2Script !== 'undefined') {
                 this.currentScript = Day2Script;
+            } else if (day === 3 && typeof Day3Script !== 'undefined') {
+                this.currentScript = Day3Script;
             } else {
                 this.showModal('錯誤', `Day ${day} 尚未實裝或腳本未載入。`);
                 return;
@@ -394,6 +399,8 @@ class GameEngine {
             this.currentScript = Day1Script;
         } else if (this.currentDay === 2 && typeof Day2Script !== 'undefined') {
             this.currentScript = Day2Script;
+        } else if (this.currentDay === 3 && typeof Day3Script !== 'undefined') {
+            this.currentScript = Day3Script;
         } else {
             this.showModal('錯誤', '找不到對應章節的劇本。');
             return;
@@ -566,6 +573,9 @@ class GameEngine {
                     img.className = isSameChar ? 'character-sprite' : 'character-sprite fade-in';
                     this.vnChars.appendChild(img);
                     this.vnChars.dataset.currentChar = event.name;
+                    if (event.action === 'jump') {
+                        img.classList.add('jump-anim');
+                    }
                 } else {
                     delete this.vnChars.dataset.currentChar;
                 }
@@ -609,6 +619,15 @@ class GameEngine {
                     this.vnName.style.left = '25px'; // Standard position
                 }
                 this.typeText(event.text);
+                
+                if (event.action === 'jump') {
+                    const currentImg = this.vnChars.querySelector('img');
+                    if (currentImg) {
+                        currentImg.classList.remove('jump-anim');
+                        void currentImg.offsetWidth; // trigger reflow
+                        currentImg.classList.add('jump-anim');
+                    }
+                }
                 break;
             case 'transition':
                 this.vnChars.innerHTML = ''; // Hide characters on transition
@@ -721,6 +740,10 @@ class GameEngine {
             case 'chat_qte_academic':
                 this.chatSystem.startQTEAcademic(event);
                 break;
+            case 'chat_qte_defense_pack':
+                this.hideDialogueBox();
+                this.chatSystem.startQTEDefensePack(event);
+                break;
             case 'forum_sanity_qte':
                 this.forumSystem.startForumSanityQTE(event);
                 break;
@@ -735,6 +758,16 @@ class GameEngine {
                 document.getElementById('fade-text').innerHTML = event.text;
 
                 const waitTime = event.time ? event.time * 1000 : 8000;
+            case 'add_class':
+                const addEl = document.querySelector(event.target);
+                if (addEl) addEl.classList.add(event.className);
+                this.nextEvent();
+                break;
+            case 'remove_class':
+                const remEl = document.querySelector(event.target);
+                if (remEl) remEl.classList.remove(event.className);
+                this.nextEvent();
+                break;
                 this.fadeTimer = setTimeout(() => {
                     if (this.scriptIndex >= this.currentScript.length - 1) {
                         fadeScreen.classList.remove('active');
@@ -846,7 +879,7 @@ class GameEngine {
         return path;
     }
 
-    showModal(title, msg) {
+    showModal(title, msg, onOk) {
         document.getElementById('modal-title').textContent = title;
         document.getElementById('modal-body').innerHTML = msg;
         const modal = document.getElementById('system-modal');
@@ -856,6 +889,7 @@ class GameEngine {
         closeBtn.onclick = () => {
             modal.classList.remove('active');
             closeBtn.onclick = null;
+            if (onOk) onOk();
         };
 
         modal.classList.remove('hidden');
