@@ -1,6 +1,5 @@
 const Day2Script = [
     { type: "bg", src: "" }, // 開頭先全黑屏
-    { type: "fade_text", text: "Day 2：理智與學術的雙軌攻防戰", time: 3.0 },
 
     // 🎬 【場景一：上午，高二 A 班教室】
     {
@@ -114,8 +113,8 @@ const Day2Script = [
     { type: "chat_tutorial", text: "【系統提示】<br>請進入「艾薇」的聊天室接受認知測試。" },
 
     { type: "chat_separator", targetChat: "ivy", text: "今天 早上 10:00" },
-    { type: "chat_msg", sender: "艾薇", targetChat: "ivy", avatar: "assets/img/chat_img/聊天頭像_艾薇.png", text: "雨果。今天的測試也麻煩你了。" },
-    { type: "chat_msg", sender: "艾薇", targetChat: "ivy", avatar: "assets/img/chat_img/聊天頭像_艾薇.png", text: "我準備了新的題目。" },
+    { type: "chat_msg", sender: "艾薇", targetChat: "ivy", avatar: "assets/img/chat_img/聊天頭像_艾薇.png", text: "雨果。準備好了嗎？" },
+    { type: "chat_msg", sender: "艾薇", targetChat: "ivy", avatar: "assets/img/chat_img/聊天頭像_艾薇.png", text: "我即將發送題目。" },
 
     { type: "wait_for_chat", chatId: "ivy" },
 
@@ -505,6 +504,7 @@ const Day2Script = [
         avatar: "assets/img/cha/雨果_頭像_緊張.png",
         voice: "assets/audio/voice/雨果_驚嚇.wav"
     },
+    { type: "chat_tutorial", text: "<div style='text-align:left;'><b>📞 【電話節奏 QTE - 規則說明】 📞</b><br><br>學長打電話來了！<br><br><b>操作方式：</b><br>1. 當學長說話時，你的心跳會隨著對話逐漸加快。<br>2. 請在心跳條變紅前，點擊<b style='color:#4caf50;'>『深呼吸』</b>按鈕 (或按<b>空白鍵</b>) 來平復情緒。<br>3. 如果心跳爆表，學長會發現你的異樣並導致通話失敗！<br><br><b>勝負條件：</b><br>成功撐過整通電話，不讓心跳爆表。</div>" },
     {
         type: "rhythm_call_qte",
         caller: "盧卡斯學長",
@@ -570,5 +570,9 @@ const Day2Script = [
         type: "fade_text",
         text: "<span class='fade-line-1'>Day 2 存活確認。</span><br><br><span class='fade-line-2'>理智值剩餘：70%</span>"
     },
-    { type: "return_title" }
+    { type: "delay", time: 8, stopBgm: true, },
+    {
+        type: "end_day",
+        day: 2
+    }
 ];
