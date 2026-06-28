@@ -58,7 +58,8 @@ class GameEngine {
             "旁白": { bg: "rgba(255, 255, 255, 0.8)", text: "#2c3e50" },
             "蜜拉思": { bg: "#4a2c5a", text: "#ffffff" },
             "蜜拉思老師": { bg: "#4a2c5a", text: "#ffffff" },
-            "盧卡斯學長": { bg: "#E88B72", text: "#ffffff" }
+            "盧卡斯學長": { bg: "#E88B72", text: "#ffffff" },
+            "奧拉": { bg: "#ADD8E6", text: "#2c3e50" }
         };
 
         this.bindEvents();
@@ -106,47 +107,43 @@ class GameEngine {
         });
 
         document.getElementById('btn-preload').addEventListener('click', () => {
-            if (typeof Day1Script !== 'undefined') {
-                this.showModal('提示', '正在預加載素材，請稍候...');
-                let total = 0;
-                let loaded = 0;
-                const setLoaded = () => {
-                    loaded++;
-                    if (loaded >= total) {
-                        this.showModal('提示', '所有素材預加載完成！');
-                    }
-                };
-
-                const assets = new Set();
-                Day1Script.forEach(e => {
-                    if (e.src) assets.add(e.src);
-                    if (e.avatar) assets.add(e.avatar);
-                    if (e.voice) assets.add(e.voice);
-                });
-
-                total = assets.size;
-                if (total === 0) setLoaded();
-
-                assets.forEach(url => {
-                    const resolvedUrl = this.resolveAsset(url);
-                    if (url.match(/\.(png|jpg|jpeg|gif)$/i)) {
-                        const img = new Image();
-                        img.onload = setLoaded;
-                        img.onerror = setLoaded;
-                        img.src = resolvedUrl;
-                    } else if (url.match(/\.(mp3|wav|ogg)$/i)) {
-                        const audio = new Audio();
-                        audio.oncanplaythrough = setLoaded;
-                        audio.onerror = setLoaded;
-                        audio.src = resolvedUrl;
-                        audio.load();
-                    } else {
-                        setLoaded();
-                    }
-                });
-            } else {
+            const assets = this.collectAllAssets();
+            if (assets.size === 0) {
                 this.showModal('提示', '找不到可預加載的腳本。');
+                return;
             }
+
+            let total = assets.size;
+            let loaded = 0;
+            const updateProgress = () => {
+                loaded++;
+                const pct = Math.round((loaded / total) * 100);
+                const body = document.getElementById('modal-body');
+                if (body) body.innerHTML = `正在預加載素材……<br><b>${loaded} / ${total}</b>（${pct}%）`;
+                if (loaded >= total) {
+                    this.showModal('提示', `所有素材預加載完成！<br>共 ${total} 個檔案。`);
+                }
+            };
+
+            this.showModal('提示', `正在預加載素材……<br><b>0 / ${total}</b>（0%）`);
+
+            assets.forEach(url => {
+                const resolvedUrl = this.resolveAsset(url);
+                if (url.match(/\.(png|jpg|jpeg|gif|webp)$/i)) {
+                    const img = new Image();
+                    img.onload = updateProgress;
+                    img.onerror = updateProgress;
+                    img.src = resolvedUrl;
+                } else if (url.match(/\.(mp3|wav|ogg)$/i)) {
+                    const audio = new Audio();
+                    audio.oncanplaythrough = updateProgress;
+                    audio.onerror = updateProgress;
+                    audio.src = resolvedUrl;
+                    audio.load();
+                } else {
+                    updateProgress();
+                }
+            });
         });
 
         this.vnDialogBox.addEventListener('click', () => {
@@ -213,8 +210,30 @@ class GameEngine {
 
         document.getElementById('btn-drawer-load').addEventListener('click', (e) => {
             e.stopPropagation();
-            document.getElementById('system-modal').classList.remove('active');
+            document.getElementById('settings-drawer').classList.remove('open');
+            const savedStateStr = localStorage.getItem('L_Chat_SaveState');
+            if (savedStateStr) {
+                try {
+                    const savedState = JSON.parse(savedStateStr);
+                    this.loadGame(savedState);
+                } catch (err) {
+                    this.showModal('錯誤', '存檔資料損毀。');
+                }
+            } else {
+                this.showModal('提示', '沒有找到存檔紀錄。');
+            }
         });
+
+        // 回到標題：返回主選單（會先停止當前流程）
+        const btnDrawerTitle = document.getElementById('btn-drawer-title');
+        if (btnDrawerTitle) {
+            btnDrawerTitle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                document.getElementById('settings-drawer').classList.remove('open');
+                this.resetGame();
+                this.showScreen('title');
+            });
+        }
 
         // Settings Drawer Events
         const drawer = document.getElementById('settings-drawer');
@@ -352,6 +371,19 @@ class GameEngine {
         delete this.vnChars.dataset.currentChar;
         this.hideDialogueBox();
         this.chatSystem.reset();
+
+        // 清除任何殘留的 Day4 小遊戲覆蓋層（防止從選單返回標題時殘留）
+        ['swipe-dismiss-overlay', 'gaze-defense-overlay', 'gravity-balance-overlay'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.remove();
+        });
+        // 清除背景殘影
+        if (this.vnBgOverlay) {
+            this.vnBgOverlay.style.transition = 'none';
+            this.vnBgOverlay.style.opacity = 0;
+            this.vnBgOverlay.style.backgroundImage = 'none';
+        }
+        if (this.vnBg) this.vnBg.style.backgroundImage = 'none';
     }
 
     startGame(day) {
@@ -379,10 +411,15 @@ class GameEngine {
                 this.currentScript = Day2Script;
             } else if (day === 3 && typeof Day3Script !== 'undefined') {
                 this.currentScript = Day3Script;
+            } else if (day === 4 && typeof Day4Script !== 'undefined') {
+                this.currentScript = Day4Script;
             } else {
                 this.showModal('錯誤', `Day ${day} 尚未實裝或腳本未載入。`);
                 return;
             }
+
+            // 進入本日時，先在背景靜默預加載該日的所有素材，避免切換場景時背景 / 圖片來不及載入。
+            this.preloadAssets(this.collectAssetsFrom([this.currentScript]));
 
             this.scriptIndex = -1;
             this.justFaded = true;
@@ -401,6 +438,8 @@ class GameEngine {
             this.currentScript = Day2Script;
         } else if (this.currentDay === 3 && typeof Day3Script !== 'undefined') {
             this.currentScript = Day3Script;
+        } else if (this.currentDay === 4 && typeof Day4Script !== 'undefined') {
+            this.currentScript = Day4Script;
         } else {
             this.showModal('錯誤', '找不到對應章節的劇本。');
             return;
@@ -533,7 +572,13 @@ class GameEngine {
                             this.vnBgOverlay.style.transition = 'opacity 1.5s ease-in-out';
                             this.vnBgOverlay.style.opacity = 0;
 
-                            setTimeout(() => this.nextEvent(), event.location ? 2500 : 1500);
+                            setTimeout(() => {
+                                // Clear stale overlay image so it can't flash on the next change
+                                this.vnBgOverlay.style.transition = 'none';
+                                this.vnBgOverlay.style.backgroundImage = 'none';
+                                this.vnBgOverlay.style.opacity = 0;
+                                this.nextEvent();
+                            }, event.location ? 2500 : 1500);
                         } else {
                             // Fading to a new image
                             this.vnBg.style.backgroundImage = isOldEmpty ? 'none' : currentVisBg;
@@ -546,6 +591,19 @@ class GameEngine {
                             this.vnBgOverlay.style.opacity = 1;
 
                             setTimeout(() => {
+                                // Commit the new image to the base layer WHILE the overlay (new@1)
+                                // still fully covers it — so the base's repaint is invisible.
+                                this.vnBg.style.backgroundImage = newBgUrl;
+                                // Only AFTER the base has actually painted the new image (wait two
+                                // animation frames) do we hide the overlay. Revealing an
+                                // already-painted base means no blank / reload flash.
+                                requestAnimationFrame(() => {
+                                    requestAnimationFrame(() => {
+                                        this.vnBgOverlay.style.transition = 'none';
+                                        this.vnBgOverlay.style.opacity = 0;
+                                        this.vnBgOverlay.style.backgroundImage = 'none';
+                                    });
+                                });
                                 setTimeout(() => this.nextEvent(), event.location ? 1000 : 0);
                             }, 1500);
                         }
@@ -553,6 +611,7 @@ class GameEngine {
                         this.vnBg.style.backgroundImage = newBgUrl;
                         this.vnBgOverlay.style.transition = 'none';
                         this.vnBgOverlay.style.opacity = 0;
+                        this.vnBgOverlay.style.backgroundImage = 'none';
                         this.justFaded = false;
                         setTimeout(() => this.nextEvent(), event.location ? 2500 : 0);
                     }
@@ -747,6 +806,18 @@ class GameEngine {
             case 'forum_sanity_qte':
                 this.forumSystem.startForumSanityQTE(event);
                 break;
+            case 'swipe_dismiss_qte':
+                this.hideDialogueBox();
+                this.startSwipeDismissQTE(event);
+                break;
+            case 'gravity_balance_qte':
+                this.hideDialogueBox();
+                this.startGravityBalanceQTE(event);
+                break;
+            case 'gaze_defense_qte':
+                this.hideDialogueBox();
+                this.startGazeDefenseQTE(event);
+                break;
             case 'end_day':
                 localStorage.setItem('L_Chat_SaveDay', event.day + 1);
                 this.startGame(event.day + 1);
@@ -877,6 +948,61 @@ class GameEngine {
             return this.assetBaseUrl + encodedParts.join('/');
         }
         return path;
+    }
+
+    // 遞迴收集一個（或多個）腳本中所有的素材路徑（圖片 / 音訊），無論其欄位名稱與巢狀層級。
+    collectAssetsFrom(scripts) {
+        const assets = new Set();
+        const isAsset = (s) => typeof s === 'string'
+            && s.indexOf('assets/') === 0
+            && /\.(png|jpg|jpeg|gif|webp|mp3|wav|ogg)$/i.test(s);
+        const walk = (v) => {
+            if (!v) return;
+            if (typeof v === 'string') { if (isAsset(v)) assets.add(v); return; }
+            if (Array.isArray(v)) { v.forEach(walk); return; }
+            if (typeof v === 'object') { for (const k in v) walk(v[k]); return; }
+        };
+        scripts.forEach(walk);
+        return assets;
+    }
+
+    // 收集全部章節（Day1~Day4）＋常用執行期音效，供「預加載全部素材」使用。
+    collectAllAssets() {
+        const scripts = [];
+        if (typeof Day1Script !== 'undefined') scripts.push(Day1Script);
+        if (typeof Day2Script !== 'undefined') scripts.push(Day2Script);
+        if (typeof Day3Script !== 'undefined') scripts.push(Day3Script);
+        if (typeof Day4Script !== 'undefined') scripts.push(Day4Script);
+        const assets = this.collectAssetsFrom(scripts);
+        // 部分音效寫死在系統流程中（聊天、QTE、來電），未必出現在腳本內，補上以求完整。
+        [
+            'assets/audio/sfx/收到訊息.mp3',
+            'assets/audio/sfx/發送訊息.mp3',
+            'assets/audio/sfx/按鍵音效.mp3',
+            'assets/audio/sfx/刪除.mp3',
+            'assets/audio/sfx/倒計時.mp3',
+            'assets/audio/sfx/心跳聲.mp3',
+            'assets/audio/sfx/玻璃滑動聲.mp3',
+            'assets/img/chat_img/聊天頭像_雨果.png',
+            'assets/img/chat_img/聊天頭像_盧卡斯.png',
+            'assets/img/chat_img/聊天頭像_艾薇.png'
+        ].forEach(s => assets.add(s));
+        return assets;
+    }
+
+    // 靜默預加載一批素材（不顯示 UI），用於進入某一天時先行載入該日素材。
+    preloadAssets(assetSet) {
+        assetSet.forEach(url => {
+            const resolvedUrl = this.resolveAsset(url);
+            if (url.match(/\.(png|jpg|jpeg|gif|webp)$/i)) {
+                const img = new Image();
+                img.src = resolvedUrl;
+            } else if (url.match(/\.(mp3|wav|ogg)$/i)) {
+                const audio = new Audio();
+                audio.preload = 'auto';
+                audio.src = resolvedUrl;
+            }
+        });
     }
 
     showModal(title, msg, onOk) {
