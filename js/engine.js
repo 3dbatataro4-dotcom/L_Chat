@@ -59,7 +59,11 @@ class GameEngine {
             "蜜拉思": { bg: "#4a2c5a", text: "#ffffff" },
             "蜜拉思老師": { bg: "#4a2c5a", text: "#ffffff" },
             "盧卡斯學長": { bg: "#E88B72", text: "#ffffff" },
-            "奧拉": { bg: "#ADD8E6", text: "#2c3e50" }
+            "盧卡斯（回憶）": { bg: "#E88B72", text: "#ffffff" },
+            "盧卡斯的獨白": { bg: "#E88B72", text: "#ffffff" },
+            "盧卡斯（獨白）": { bg: "#E88B72", text: "#ffffff" },
+            "奧拉": { bg: "#ADD8E6", text: "#2c3e50" },
+            "安娜塔西亞": { bg: "#EDA8CC", text: "#2c3e50" }
         };
 
         this.bindEvents();
@@ -373,10 +377,20 @@ class GameEngine {
         this.chatSystem.reset();
 
         // 清除任何殘留的 Day4 小遊戲覆蓋層（防止從選單返回標題時殘留）
-        ['swipe-dismiss-overlay', 'gaze-defense-overlay', 'gravity-balance-overlay'].forEach(id => {
+        ['swipe-dismiss-overlay', 'gaze-defense-overlay', 'gravity-balance-overlay',
+         'heartbeat-rhythm-overlay', 'focus-tap-overlay', 'swallow-timing-overlay',
+         'word-pick-overlay', 'pressure-seal-overlay', 'scrub-erase-overlay',
+         'breath-sync-overlay', 'resist-kiss-overlay', 'story-choice-overlay',
+         'carnival-aim-overlay', 'trace-path-overlay'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.remove();
         });
+        // 清除鏡頭演出殘留 class
+        const vnScreen = document.getElementById('vn-screen');
+        if (vnScreen) {
+            ['ghost-mode', 'lightning-flash', 'cam-zoom-slow', 'cam-dim', 'white-soft', 'blink-close', 'heartbeat-flash']
+                .forEach(c => vnScreen.classList.remove(c));
+        }
         // 清除背景殘影
         if (this.vnBgOverlay) {
             this.vnBgOverlay.style.transition = 'none';
@@ -413,6 +427,12 @@ class GameEngine {
                 this.currentScript = Day3Script;
             } else if (day === 4 && typeof Day4Script !== 'undefined') {
                 this.currentScript = Day4Script;
+            } else if (day === 5 && typeof Day5Script !== 'undefined') {
+                this.currentScript = Day5Script;
+            } else if (day === 6 && typeof Day6Script !== 'undefined') {
+                this.currentScript = Day6Script;
+            } else if (day === 7 && typeof Day7Script !== 'undefined') {
+                this.currentScript = Day7Script;
             } else {
                 this.showModal('錯誤', `Day ${day} 尚未實裝或腳本未載入。`);
                 return;
@@ -440,6 +460,12 @@ class GameEngine {
             this.currentScript = Day3Script;
         } else if (this.currentDay === 4 && typeof Day4Script !== 'undefined') {
             this.currentScript = Day4Script;
+        } else if (this.currentDay === 5 && typeof Day5Script !== 'undefined') {
+            this.currentScript = Day5Script;
+        } else if (this.currentDay === 6 && typeof Day6Script !== 'undefined') {
+            this.currentScript = Day6Script;
+        } else if (this.currentDay === 7 && typeof Day7Script !== 'undefined') {
+            this.currentScript = Day7Script;
         } else {
             this.showModal('錯誤', '找不到對應章節的劇本。');
             return;
@@ -525,9 +551,16 @@ class GameEngine {
         }
 
         if (event.type === 'sfx' && event.src) {
+            // 支援環境音循環 (loop)；一般音效則單次播放並重置 loop 狀態
+            this.sfx.loop = !!event.loop;
             this.playAudio(this.sfx, event.src);
             this.nextEvent();
             return;
+        }
+        // 停止當前音效（例如洗澡聲、環境音在場景結束時收掉）
+        if (event.stopSfx) {
+            this.sfx.pause();
+            this.sfx.loop = false;
         }
 
         switch (event.type) {
@@ -814,9 +847,57 @@ class GameEngine {
                 this.hideDialogueBox();
                 this.startGravityBalanceQTE(event);
                 break;
+            case 'heartbeat_rhythm_qte':
+                this.hideDialogueBox();
+                this.startHeartbeatRhythmQTE(event);
+                break;
+            case 'focus_tap_qte':
+                this.hideDialogueBox();
+                this.startFocusTapQTE(event);
+                break;
+            case 'swallow_timing_qte':
+                this.hideDialogueBox();
+                this.startSwallowTimingQTE(event);
+                break;
+            case 'word_pick_qte':
+                this.hideDialogueBox();
+                this.startWordPickQTE(event);
+                break;
+            case 'pressure_seal_qte':
+                this.hideDialogueBox();
+                this.startPressureSealQTE(event);
+                break;
+            case 'scrub_erase_qte':
+                this.hideDialogueBox();
+                this.startScrubEraseQTE(event);
+                break;
+            case 'breath_sync_qte':
+                this.hideDialogueBox();
+                this.startBreathSyncQTE(event);
+                break;
+            case 'resist_kiss_qte':
+                this.hideDialogueBox();
+                this.startResistKissQTE(event);
+                break;
+            case 'carnival_aim_qte':
+                this.hideDialogueBox();
+                this.startCarnivalAimQTE(event);
+                break;
+            case 'trace_path_qte':
+                this.hideDialogueBox();
+                this.startTracePathQTE(event);
+                break;
             case 'gaze_defense_qte':
                 this.hideDialogueBox();
                 this.startGazeDefenseQTE(event);
+                break;
+            case 'h_rhythm_squeeze_qte':
+                this.hideDialogueBox();
+                this.startHRhythmSqueezeQTE(event);
+                break;
+            case 'h_starlight_grip_qte':
+                this.hideDialogueBox();
+                this.startHStarlightGripQTE(event);
                 break;
             case 'end_day':
                 localStorage.setItem('L_Chat_SaveDay', event.day + 1);
@@ -824,11 +905,26 @@ class GameEngine {
                 break;
             case 'fade_text':
                 this.hideDialogueBox();
+                if (event.returnToTitle) {
+                    try { localStorage.setItem('L_Chat_Clear', 'true'); } catch (e) { }
+                }
                 const fadeScreen = document.getElementById('fade-screen');
                 fadeScreen.classList.add('active');
                 document.getElementById('fade-text').innerHTML = event.text;
 
                 const waitTime = event.time ? event.time * 1000 : 8000;
+                this.fadeTimer = setTimeout(() => {
+                    if (this.scriptIndex >= this.currentScript.length - 1 || event.returnToTitle) {
+                        try { localStorage.setItem('L_Chat_Clear', 'true'); } catch (e) { }
+                        fadeScreen.classList.remove('active');
+                        this.resetGame();
+                        setTimeout(() => this.showScreen('title'), 800);
+                    } else {
+                        fadeScreen.classList.remove('active');
+                        setTimeout(() => this.nextEvent(), 800);
+                    }
+                }, this.isSkip ? 100 : waitTime);
+                break;
             case 'add_class':
                 const addEl = document.querySelector(event.target);
                 if (addEl) addEl.classList.add(event.className);
@@ -839,22 +935,71 @@ class GameEngine {
                 if (remEl) remEl.classList.remove(event.className);
                 this.nextEvent();
                 break;
-                this.fadeTimer = setTimeout(() => {
-                    if (this.scriptIndex >= this.currentScript.length - 1) {
-                        fadeScreen.classList.remove('active');
-                        setTimeout(() => this.showScreen('title'), 800);
-                    } else {
-                        fadeScreen.classList.remove('active');
-                        setTimeout(() => this.nextEvent(), 800);
-                    }
-                }, this.isSkip ? 100 : waitTime);
-                break;
 
             case 'show_bottom_nav':
                 const bNav = document.getElementById('lchat-bottom-nav');
                 if (bNav) bNav.style.display = 'flex';
                 this.nextEvent();
                 break;
+
+            // ---- 劇情分歧支援 (Day6+) ----
+            case 'label':
+                // 純粹的跳轉錨點，不做任何事
+                this.nextEvent();
+                break;
+            case 'jump': {
+                const jIdx = this.currentScript.findIndex(s => s.type === 'label' && s.name === event.to);
+                if (jIdx >= 0) this.scriptIndex = jIdx;
+                this.nextEvent();
+                break;
+            }
+            case 'jump_flag': {
+                // 依先前存下的 flag 值自動跳轉（例如 Day7 依 Day6 的路線選擇分線）。
+                let val = (this.flags && this.flags[event.key]) || null;
+                if (val == null) { try { val = localStorage.getItem('L_Chat_Flag_' + event.key); } catch (e) { } }
+                const target = event.map && val != null ? event.map[val] : null;
+                if (target) {
+                    const idx = this.currentScript.findIndex(s => s.type === 'label' && s.name === target);
+                    if (idx >= 0) this.scriptIndex = idx;
+                }
+                // 若沒有對應 flag，就直接往下走（通常後面接一個手動選路的 story_choice，供直接測試）
+                this.nextEvent();
+                break;
+            }
+            case 'story_choice': {
+                this.hideDialogueBox();
+                let scOverlay = document.getElementById('story-choice-overlay');
+                if (scOverlay) scOverlay.remove();
+                scOverlay = document.createElement('div');
+                scOverlay.id = 'story-choice-overlay';
+                if (event.prompt) {
+                    const t = document.createElement('div');
+                    t.className = 'story-choice-title';
+                    t.innerHTML = event.prompt;
+                    scOverlay.appendChild(t);
+                }
+                (event.options || []).forEach(opt => {
+                    const btn = document.createElement('button');
+                    btn.className = 'story-choice-btn';
+                    btn.innerHTML = `<span>${opt.text}</span>` + (opt.hint ? `<small>${opt.hint}</small>` : '');
+                    btn.onclick = () => {
+                        if (opt.flag) {
+                            this.flags = this.flags || {};
+                            this.flags[opt.flag.key] = opt.flag.value;
+                            try { localStorage.setItem('L_Chat_Flag_' + opt.flag.key, opt.flag.value); } catch (e) { }
+                        }
+                        scOverlay.remove();
+                        if (opt.jump) {
+                            const idx = this.currentScript.findIndex(s => s.type === 'label' && s.name === opt.jump);
+                            if (idx >= 0) this.scriptIndex = idx;
+                        }
+                        this.nextEvent();
+                    };
+                    scOverlay.appendChild(btn);
+                });
+                document.getElementById('game-container').appendChild(scOverlay);
+                break;
+            }
 
             case 'show_be':
                 this.showScreen('be');
@@ -973,6 +1118,9 @@ class GameEngine {
         if (typeof Day2Script !== 'undefined') scripts.push(Day2Script);
         if (typeof Day3Script !== 'undefined') scripts.push(Day3Script);
         if (typeof Day4Script !== 'undefined') scripts.push(Day4Script);
+        if (typeof Day5Script !== 'undefined') scripts.push(Day5Script);
+        if (typeof Day6Script !== 'undefined') scripts.push(Day6Script);
+        if (typeof Day7Script !== 'undefined') scripts.push(Day7Script);
         const assets = this.collectAssetsFrom(scripts);
         // 部分音效寫死在系統流程中（聊天、QTE、來電），未必出現在腳本內，補上以求完整。
         [
