@@ -24,5 +24,24 @@ document.addEventListener('DOMContentLoaded', () => {
     // 初始化遊戲引擎
     window.gameEngine = new GameEngine();
 
-    // 可以在這裡加入額外的初始化邏輯，例如自動存檔檢查等
+    // 手機端與觸控防護：防止點擊對話框、按鈕時產生文字選取反白與長按菜單
+    document.addEventListener('selectstart', (e) => {
+        if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+            e.preventDefault();
+            return false;
+        }
+    });
+
+    document.addEventListener('contextmenu', (e) => {
+        if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+            e.preventDefault();
+            return false;
+        }
+    }, { passive: false });
+
+    document.addEventListener('dblclick', (e) => {
+        if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+            e.preventDefault();
+        }
+    });
 });
